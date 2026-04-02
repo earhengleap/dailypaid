@@ -1,7 +1,8 @@
+"use client"
+
 import * as React from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { formatCurrency, EXCHANGE_RATE } from "@/lib/utils"
-import { ArrowUpRight, ArrowDownLeft, Wallet } from "lucide-react"
+import { ArrowUpRight, ArrowDownLeft, Wallet, Target } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 
@@ -14,30 +15,30 @@ interface BalanceCardProps {
 }
 
 const Sparkline = ({ data, color }: { data: number[], color: string }) => {
-  if (!data?.length) return null
+  if (!data?.length || data.length < 2) return null
   const min = Math.min(...data)
   const max = Math.max(...data)
   const range = max - min || 1
   const points = data.map((v, i) => ({
     x: (i / (data.length - 1)) * 100,
-    y: 100 - ((v - min) / range) * 80 - 10
+    y: 100 - ((v - min) / range) * 70 - 15
   }))
 
   const path = `M ${points.map(p => `${p.x},${p.y}`).join(' L ')}`
 
   return (
-    <div className="absolute inset-x-0 bottom-0 h-12 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-700">
+    <div className="absolute inset-x-0 bottom-0 h-16 pointer-events-none opacity-15 group-hover:opacity-30 transition-opacity duration-700">
       <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible" preserveAspectRatio="none">
         <motion.path
           d={path}
           fill="none"
           stroke={color}
-          strokeWidth="1.5"
+          strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
           initial={{ pathLength: 0 }}
           animate={{ pathLength: 1 }}
-          transition={{ duration: 2, ease: "easeInOut" }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
         />
       </svg>
     </div>
@@ -48,54 +49,72 @@ export function BalanceCard({ title, amountUSD, type, className, history = [] }:
   const amountRiel = amountUSD * EXCHANGE_RATE
   
   const iconMap = {
-    income: <ArrowUpRight className="h-3.5 w-3.5 text-primary opacity-60" />,
-    expense: <ArrowDownLeft className="h-3.5 w-3.5 text-accent opacity-60" />,
-    balance: <Wallet className="h-3.5 w-3.5 text-primary opacity-60" />,
+    income: <ArrowUpRight className="h-4 w-4" />,
+    expense: <ArrowDownLeft className="h-4 w-4" />,
+    balance: <Wallet className="h-4 w-4" />,
   }
 
-  const colors = {
-    income: "#4e46e5",
-    expense: "#f43f5e",
-    balance: "#4e46e5",
+  const colorMap = {
+    income: {
+      accent: "text-emerald-500",
+      bg: "bg-emerald-500/10 dark:bg-emerald-400/10",
+      spark: "#10b981",
+    },
+    expense: {
+      accent: "text-rose-500",
+      bg: "bg-rose-500/10 dark:bg-rose-400/10",
+      spark: "#f43f5e",
+    },
+    balance: {
+      accent: "text-indigo-500",
+      bg: "bg-indigo-500/10 dark:bg-indigo-400/10",
+      spark: "#6366f1",
+    },
   }
+
+  const colors = colorMap[type]
 
   return (
     <motion.div
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.99 }}
-      transition={{ type: "spring", stiffness: 400, damping: 30 }}
-      className={cn("h-full group", className)}
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      className={cn("group", className)}
     >
-      <Card className={cn(
-        "relative h-full overflow-hidden border border-white/40 dark:border-white/[0.05] bg-white/60 dark:bg-white/[0.02] backdrop-blur-xl shadow-premium transition-all duration-500",
+      <div className={cn(
+        "relative h-full overflow-hidden rounded-2xl",
+        "bg-white dark:bg-zinc-900",
+        "border border-zinc-200/80 dark:border-zinc-800",
+        "shadow-sm hover:shadow-md dark:shadow-none",
+        "transition-shadow duration-300",
+        "p-5 sm:p-6",
       )}>
-        <Sparkline data={history.length > 0 ? history : [0, 0, 0]} color={colors[type]} />
+        <Sparkline data={history.length > 1 ? history : []} color={colors.spark} />
         
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-6 sm:p-7 pb-0 relative z-10">
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-[10px] font-black text-foreground/40 uppercase tracking-[0.3em]">
-              {title}
-            </CardTitle>
-          </div>
-          <div className="p-2 rounded-xl bg-background/30 dark:bg-white/[0.03] border border-white/20 dark:border-white/[0.03]">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4 relative z-10">
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500">
+            {title}
+          </span>
+          <div className={cn("p-1.5 rounded-lg", colors.bg, colors.accent)}>
             {iconMap[type]}
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="space-y-4 p-6 sm:p-7 pt-5 relative z-10">
-          <div className="flex flex-col gap-0.5">
-            <div className={cn(
-              "font-black tracking-tighter leading-tight tabular-nums text-foreground/90",
-              type === 'balance' ? "text-4xl xs:text-5xl" : "text-2xl sm:text-3xl"
-            )}>
-              {formatCurrency(amountUSD, 'USD')}
-            </div>
-            <div className="text-[10px] sm:text-xs font-bold text-foreground/20 tracking-tight tabular-nums">
-              {formatCurrency(amountRiel, 'KHR')}
-            </div>
+        {/* Amount */}
+        <div className="relative z-10 space-y-1">
+          <div className={cn(
+            "font-extrabold tracking-tight tabular-nums",
+            type === 'balance' ? "text-2xl sm:text-3xl" : "text-xl sm:text-2xl",
+            "text-zinc-900 dark:text-zinc-100"
+          )}>
+            {formatCurrency(amountUSD, 'USD')}
           </div>
-        </CardContent>
-      </Card>
+          <div className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 tabular-nums tracking-tight">
+            {formatCurrency(amountRiel, 'KHR')}
+          </div>
+        </div>
+      </div>
     </motion.div>
   )
 }

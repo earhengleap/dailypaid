@@ -70,6 +70,14 @@ body {
   transition: background-color 0.5s ease, color 0.5s ease;
 }
 
+button, [role="button"] {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 body::before {
   content: "";
   position: fixed;

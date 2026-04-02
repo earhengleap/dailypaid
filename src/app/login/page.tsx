@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Card } from "@/components/ui/Card"
 import { signInAction, signUpAction } from "@/lib/auth-actions"
-import { SupportChat } from "@/components/ui/SupportChat"
 import { cn } from "@/lib/utils"
 
 export default function LoginPage() {
@@ -122,6 +121,7 @@ export default function LoginPage() {
                     required
                     name="email"
                     type="email"
+                    id="email-input"
                     placeholder="Email Address" 
                     className="pl-12 h-14 rounded-2xl bg-white/50 dark:bg-white/[0.03] border-none text-[10px] font-black tracking-widest focus-visible:ring-primary/20"
                   />
@@ -164,26 +164,11 @@ export default function LoginPage() {
                   {mode === "signIn" ? "Request a new account" : "Login with existing vault"}
                 </button>
 
-                {mode === "signIn" && (
-                  <button
-                    type="button"
-                    className="text-[9px] font-black uppercase tracking-[0.3em] text-accent/40 hover:text-accent transition-colors py-2"
-                    onClick={() => {
-                      // We'll let the SupportChat handle being open
-                      const event = new CustomEvent('open-support-chat', { detail: { message: "I forgot my password and need assistance." } })
-                      window.dispatchEvent(event)
-                    }}
-                  >
-                    Forgot Password?
-                  </button>
-                )}
               </div>
             </form>
           </Card>
         </motion.div>
       </div>
-
-      <SupportChat />
     </main>
   )
 }
